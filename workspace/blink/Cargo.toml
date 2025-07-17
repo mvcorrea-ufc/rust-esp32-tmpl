@@ -1,0 +1,8 @@
+[workspace]
+members = [
+    "workspace/blink",
+]
+
+# This profile is inherited by all workspace members
+[profile.release]
+opt-level = "s"

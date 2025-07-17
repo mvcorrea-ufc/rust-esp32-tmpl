@@ -1,0 +1,25 @@
+services:
+  dev-container:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "2222:22"
+    volumes:
+      - .:/home/vscode/project:z
+      - /dev:/dev:rw  # Mount entire /dev directory
+    # --- OR (if not mounting /dev) ---
+    # --- IMPORTANT ---
+    # For espflash to work, you need to expose your ESP32's USB device to the container.
+    # 1. Find your device path on your host machine. It's usually /dev/ttyUSB0 or /dev/ttyACM0.
+    #    You can use the 'ls /dev/tty*' command to list devices.
+    # 2. Uncomment the 'devices' section below and replace '/dev/ttyUSB0' with the correct path.
+    #
+    # devices:
+    #   - "/dev/ttyUSB0:/dev/ttyUSB0"
+    #
+    # If you are on a system with SELinux (like Fedora), you might need to add the 'privileged' flag.
+    # privileged: true
+    cap_add:
+      - SYS_ADMIN
+    restart: unless-stopped
