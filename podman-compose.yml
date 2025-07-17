@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: esp32-dev-tmpl
+    hostname: esp32-dev-tmpl
     ports:
       - "2222:22"
     volumes:
