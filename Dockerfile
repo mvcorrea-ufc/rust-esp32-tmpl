@@ -62,7 +62,8 @@ RUN sed -i 's/^#?PermitRootLogin .*/PermitRootLogin no/' /etc/ssh/sshd_config &&
 # Create the workspace directory and set ownership before mounting.
 RUN mkdir /workspace
 # Ensure the vscode user owns their home directory and the workspace.
-RUN chown -R vscode:vscode /home/vscode /workspace
+RUN chown -R vscode:vscode /home/vscode
+RUN chown -R vscode:vscode /workspace
 
 # --- Finalization ---
 # Set the default working directory for the project.

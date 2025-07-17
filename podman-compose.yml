@@ -1,5 +1,5 @@
 services:
-  dev-container:
+  esp32dev:
     build:
       context: .
       dockerfile: Dockerfile
