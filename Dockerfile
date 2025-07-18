@@ -20,13 +20,10 @@ RUN apt-get update && apt-get install -y \
 
 # --- User and Toolchain Installation ---
 
-# Arguments to receive the host user's UID and GID
-ARG USER_ID=1000
-ARG GROUP_ID=1000
-
-# Create a group and user with the specified IDs.
-RUN groupadd -g $GROUP_ID vscode && \
-    useradd -u $USER_ID -g $GROUP_ID -m -s /bin/bash vscode
+# Create a 'vscode' user with a standard UID. Podman's userns_mode will handle mapping.
+RUN useradd -m -s /bin/bash -u 1000 vscode
+# Set a simple password ('vscode').
+RUN echo 'vscode:vscode' | chpasswd
 # Add the user to the 'sudo' group (for administrative tasks) and 'dialout' (for serial port access).
 RUN usermod -aG sudo vscode
 RUN usermod -aG dialout vscode
@@ -72,3 +69,4 @@ EXPOSE 22
 
 # Default command to start the container. The UID/GID mapping handles permissions.
 CMD ["/usr/sbin/sshd", "-D"]
+

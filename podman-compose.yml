@@ -3,15 +3,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        # Pass the host user's UID and GID to the Dockerfile to match permissions
-        USER_ID: ${UID:-1000}
-        GROUP_ID: ${GID:-1000}
     container_name: esp32-dev-tmpl
     hostname: esp32-dev-tmpl
     ports:
       - "2222:22"
-    userns_mode: keep-id
+    # This is the key to mapping the container user to the host user,
+    # preventing file ownership issues on the host.
+    userns_mode: "keep-id"
     volumes:
       - ./workspace:/workspace:z
       - /dev:/dev:rw  # Mount entire /dev directory
