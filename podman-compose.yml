@@ -24,7 +24,7 @@ services:
     #   - "/dev/ttyUSB0:/dev/ttyUSB0"
     #
     # If you are on a system with SELinux (like Fedora), you might need to add the 'privileged' flag.
-    # privileged: true
+    privileged: true
     cap_add:
       - SYS_ADMIN
     restart: unless-stopped

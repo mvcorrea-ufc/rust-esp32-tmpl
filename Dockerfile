@@ -41,6 +41,9 @@ RUN mkdir /workspace #&& chown vscode:vscode /workspace
 RUN sed -i 's/^#?PermitRootLogin .* /PermitRootLogin yes/' /etc/ssh/sshd_config && \
     sed -i 's/^#?PasswordAuthentication .* /PasswordAuthentication yes/' /etc/ssh/sshd_config
 
+# Set a password for the root user.
+RUN echo 'root:root' | chpasswd
+
 
 # # Switch to the 'vscode' user to install the Rust toolchain in their home directory.
 # USER vscode
