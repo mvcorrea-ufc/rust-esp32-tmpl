@@ -69,5 +69,7 @@ WORKDIR /workspace
 # Expose port 22 to allow external SSH connections.
 EXPOSE 22
 
-# Default command to start the container: runs the SSH daemon in the foreground.
-CMD ["/usr/sbin/sshd", "-D"]
+# Default command to start the container:
+# 1. Fix ownership of the mounted workspace volume.
+# 2. Run the SSH daemon in the foreground.
+CMD ["sh", "-c", "chown -R vscode:vscode /workspace && /usr/sbin/sshd -D"]
