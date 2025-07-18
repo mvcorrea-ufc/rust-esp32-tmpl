@@ -18,48 +18,46 @@ RUN apt-get update && apt-get install -y \
     openssh-server \
     && rm -rf /var/lib/apt/lists/*
 
-# --- Rust Installation ---
-# Install Rust via rustup, the recommended tool for managing Rust toolchains.
-# The '-y' flag automates the installation.
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-# Add the Cargo bin directory to the system's PATH.
-ENV PATH="/root/.cargo/bin:${PATH}"
+# --- User and Toolchain Installation ---
 
-# --- ESP Toolchain Installation ---
-# Install the cross-compilation target for the base RISC-V architecture (IMC).
-# This target is used by the ESP32-C3.
-RUN rustup target add riscv32imc-unknown-none-elf
-
-# To use other RISC-V ESP32 chips, you will need different targets.
-# Uncomment the lines below according to your needs.
-#
-# For ESP32-C6 and ESP32-S3 (which use the 'A' extension for atomics):
-# RUN rustup target add riscv32imac-unknown-none-elf
-#
-# For ESP32-H2 (which uses 'A' and 'F' extensions for floating point):
-# RUN rustup target add riscv32imafc-unknown-none-elf
-
-# Install espflash (for flashing the firmware to the chip) and ldproxy (for the linker).
-RUN cargo install espflash ldproxy
-
-# --- User and SSH Configuration ---
 # Create a 'vscode' user to avoid working as root in day-to-day tasks.
 RUN useradd -m -s /bin/bash vscode
-# Set a simple password ('vscode'). For production or exposed environments,
-# it is HIGHLY recommended to use SSH key-based authentication.
+# Set a simple password ('vscode').
 RUN echo 'vscode:vscode' | chpasswd
 # Add the user to the 'sudo' group (for administrative tasks) and 'dialout' (for serial port access).
 RUN usermod -aG sudo vscode
 RUN usermod -aG dialout vscode
 
-# Configure the SSH server.
-RUN mkdir -p /var/run/sshd /home/vscode/.ssh && chmod 700 /home/vscode/.ssh
+# Switch to the 'vscode' user to install the Rust toolchain in their home directory.
+USER vscode
+WORKDIR /home/vscode
+
+# Install Rust via rustup.
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+# Add the Cargo bin directory to the user's PATH.
+ENV PATH="/home/vscode/.cargo/bin:${PATH}"
+
+# Install the cross-compilation target for the ESP32-C3.
+RUN rustup target add riscv32imc-unknown-none-elf
+# Install espflash and ldproxy for the user.
+RUN cargo install espflash ldproxy
+
+# Create the .ssh directory as the 'vscode' user for correct ownership.
+RUN mkdir /home/vscode/.ssh && chmod 700 /home/vscode/.ssh
+
+# Switch back to the root user for final administrative tasks.
+USER root
+WORKDIR /
+
+# --- SSH Configuration ---
+# Create the SSH daemon's run directory.
+RUN mkdir -p /var/run/sshd
 
 # Update sshd_config to robustly enable password auth and disable root login.
-RUN sed -i 's/^#?PermitRootLogin .*/PermitRootLogin no/' /etc/ssh/sshd_config && \
-    sed -i 's/^#?PasswordAuthentication .*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+RUN sed -i 's/^#?PermitRootLogin .* /PermitRootLogin no/' /etc/ssh/sshd_config && \
+    sed -i 's/^#?PasswordAuthentication .* /PasswordAuthentication yes/' /etc/ssh/sshd_config
 
-# Ensure the vscode user owns their home directory.
+# Ensure the vscode user owns their home directory as a safeguard.
 RUN chown -R vscode:vscode /home/vscode
 
 # --- Finalization ---
