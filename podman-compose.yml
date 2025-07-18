@@ -21,13 +21,12 @@ services:
     # 2. Uncomment the 'devices' section below and replace '/dev/ttyUSB0' with the correct path.
     #
     devices:
+      - /dev/ttyACM0:/dev/ttyACM0:U
     #   - "/dev/ttyUSB0:/dev/ttyUSB0"
-      - "/dev/ttyACM0:/dev/ttyACM0"
     #
     # If you are on a system with SELinux (like Fedora), you might need to add the 'privileged' flag.
     privileged: true
-    #userns: host
-    userns_mode: host
+    #userns_mode: host
     cap_add:
       - SYS_ADMIN
     restart: unless-stopped
