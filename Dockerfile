@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # --- Dependency Installation ---
 # Update packages and install essential dependencies for compilation (build-essential),
 # hardware communication (libudev-dev), script downloading (curl), version control (git),
-# and the SSH server for remote development.
+# the SSH server, and sudo for elevated privileges.
 RUN apt-get update && apt-get install -y \
     build-essential \
     pkg-config \
@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y \
     git \
     neovim usbutils \
     openssh-server \
+    sudo \
     && rm -rf /var/lib/apt/lists/*
 
 # --- User and Toolchain Installation ---
@@ -24,9 +25,15 @@ RUN apt-get update && apt-get install -y \
 RUN useradd -m -s /bin/bash -u 1000 vscode
 # Set a simple password ('vscode').
 RUN echo 'vscode:vscode' | chpasswd
-# Add the user to the 'sudo' group (for administrative tasks) and 'dialout' (for serial port access).
-RUN usermod -aG sudo vscode
+# Add the user to the 'dialout' group for serial port access.
 RUN usermod -aG dialout vscode
+# Grant passwordless sudo privileges to the 'vscode' user.
+RUN echo "vscode ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/vscode && \
+    chmod 0440 /etc/sudoers.d/vscode
+# Update sshd_config to robustly enable password auth and disable root login.
+RUN sed -i 's/^#?PermitRootLogin .* /PermitRootLogin no/' /etc/ssh/sshd_config && \
+    sed -i 's/^#?PasswordAuthentication .* /PasswordAuthentication yes/' /etc/ssh/sshd_config
+
 
 # Switch to the 'vscode' user to install the Rust toolchain in their home directory.
 USER vscode
@@ -39,26 +46,15 @@ ENV PATH="/home/vscode/.cargo/bin:${PATH}"
 
 # Install the cross-compilation target for the ESP32-C3.
 RUN rustup target add riscv32imc-unknown-none-elf
+
 # Install espflash and ldproxy for the user.
 RUN cargo install espflash ldproxy
 
 # Create the .ssh directory as the 'vscode' user for correct ownership.
 RUN mkdir /home/vscode/.ssh && chmod 700 /home/vscode/.ssh
 
-# Switch back to the root user for final administrative tasks.
-USER root
-WORKDIR /
-
-# --- SSH Configuration ---
-# Create the SSH daemon's run directory.
-RUN mkdir -p /var/run/sshd
-
-# Update sshd_config to robustly enable password auth and disable root login.
-RUN sed -i 's/^#?PermitRootLogin .* /PermitRootLogin no/' /etc/ssh/sshd_config && \
-    sed -i 's/^#?PasswordAuthentication .* /PasswordAuthentication yes/' /etc/ssh/sshd_config
-
 # Ensure the vscode user owns their home directory as a safeguard.
-RUN chown -R vscode:vscode /home/vscode
+RUN chown -R vscode:vscode /home/vscode /workspace
 
 # --- Finalization ---
 # Set the default working directory for the project.
