@@ -1,12 +1,16 @@
 [package]
-name = "blink"
+name = "blinky"
 version = "0.1.0"
+authors = ["Sergio Gasquez <sergio.gasquez@gmail.com>"]
 edition = "2021"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 esp-hal = { version = "0.23.1", features = ["esp32c3"] }
-esp-backtrace = { version = "0.17.0", features = ["esp32c3", "panic-handler", "exception-handler"] }
-esp-println = { version = "0.15.0", features = ["esp32c3"] }
-
-[features]
-default = []
+esp-println = { version = "0.13.0", features = ["esp32c3"] }
+esp-backtrace = { version = "0.15.0", features = [
+    "esp32c3",
+    "panic-handler",
+    "exception-handler",
+    "println",
+] }
