@@ -70,6 +70,9 @@ WORKDIR /workspace
 # Expose port 22 to allow external SSH connections.
 EXPOSE 22
 
+# Create the directory for the SSH daemon.
+RUN mkdir -p /run/sshd
+
 # Default command to start the container. The UID/GID mapping handles permissions.
 CMD ["/usr/sbin/sshd", "-D"]
 
